@@ -55,18 +55,23 @@ const Auth = () => {
 
         // Redirect based on user role
         setTimeout(async () => {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .single();
+          try {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', data.user.id)
+              .single();
 
-          const role = roleData?.role;
-          if (role === 'farmer') {
-            navigate('/farmer-dashboard');
-          } else if (role === 'buyer') {
-            navigate('/buyer-marketplace');
-          } else {
+            const role = roleData?.role;
+            if (role === 'farmer') {
+              navigate('/farmer-dashboard');
+            } else if (role === 'buyer') {
+              navigate('/buyer-marketplace');
+            } else {
+              navigate('/');
+            }
+          } catch (roleError) {
+            console.error('Error fetching user role:', roleError);
             navigate('/');
           }
         }, 100);
