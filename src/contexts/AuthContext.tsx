@@ -54,7 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return null;
     
     try {
-      const { data, error } = await supabase
+      // Use any type to bypass TypeScript issues with auto-generated types
+      const { data, error } = await (supabase as any)
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)

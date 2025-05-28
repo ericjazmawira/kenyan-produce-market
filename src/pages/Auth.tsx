@@ -56,11 +56,18 @@ const Auth = () => {
         // Redirect based on user role
         setTimeout(async () => {
           try {
-            const { data: roleData } = await supabase
+            // Use any type to bypass TypeScript issues with auto-generated types
+            const { data: roleData, error: roleError } = await (supabase as any)
               .from('user_roles')
               .select('role')
               .eq('user_id', data.user.id)
               .single();
+
+            if (roleError) {
+              console.error('Error fetching user role:', roleError);
+              navigate('/');
+              return;
+            }
 
             const role = roleData?.role;
             if (role === 'farmer') {
