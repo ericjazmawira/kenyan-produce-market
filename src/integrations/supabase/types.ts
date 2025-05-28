@@ -9,30 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      farm2table: {
-        Row: {
-          id: number
-          location: string | null
-          name: string
-          price: number | null
-          timestamp: string | null
-        }
-        Insert: {
-          id?: number
-          location?: string | null
-          name: string
-          price?: number | null
-          timestamp?: string | null
-        }
-        Update: {
-          id?: number
-          location?: string | null
-          name?: string
-          price?: number | null
-          timestamp?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
