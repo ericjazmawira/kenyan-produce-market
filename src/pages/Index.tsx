@@ -4,8 +4,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, Users, TrendingUp, Truck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Header */}
@@ -17,12 +20,20 @@ const Index = () => {
               <span className="text-2xl font-bold text-green-800">Farm2Table</span>
             </div>
             <div className="flex space-x-4">
-              <Link to="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-              <Link to="/register">
-                <Button className="bg-green-600 hover:bg-green-700">Get Started</Button>
-              </Link>
+              {user ? (
+                <Link to="/farmer-dashboard">
+                  <Button className="bg-green-600 hover:bg-green-700">Dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="outline">Login</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button className="bg-green-600 hover:bg-green-700">Get Started</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
