@@ -54,19 +54,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return null;
     
     try {
-      // Use any type to bypass TypeScript issues with auto-generated types
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching user role:', error);
         return null;
       }
       
-      return data?.role || null;
+      // If no role found, try to create one based on user metadata
+      if (!data) {
+        const roleFromMetadata = user.user_metadata?.role || 'buyer';
+        
+        // Attempt to insert the role
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: roleFromMetadata
+          });
+          
+        if (insertError) {
+          console.error('Error creating user role:', insertError);
+          return roleFromMetadata; // Return the role from metadata even if insert fails
+        }
+        
+        return roleFromMetadata;
+      }
+      
+      return data.role || null;
     } catch (error) {
       console.error('Error in getUserRole:', error);
       return null;

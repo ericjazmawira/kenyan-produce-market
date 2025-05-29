@@ -56,20 +56,32 @@ const Auth = () => {
         // Redirect based on user role
         setTimeout(async () => {
           try {
-            // Use any type to bypass TypeScript issues with auto-generated types
-            const { data: roleData, error: roleError } = await (supabase as any)
+            const { data: roleData, error: roleError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', data.user.id)
-              .single();
+              .maybeSingle();
 
             if (roleError) {
               console.error('Error fetching user role:', roleError);
-              navigate('/');
-              return;
             }
 
-            const role = roleData?.role;
+            let role = roleData?.role;
+            
+            // If no role found, try to get from user metadata and create role entry
+            if (!role) {
+              role = data.user.user_metadata?.role || 'buyer';
+              
+              // Try to insert the role for existing users
+              await supabase
+                .from('user_roles')
+                .insert({
+                  user_id: data.user.id,
+                  role: role
+                })
+                .single();
+            }
+
             if (role === 'farmer') {
               navigate('/farmer-dashboard');
             } else if (role === 'buyer') {
@@ -78,8 +90,9 @@ const Auth = () => {
               navigate('/');
             }
           } catch (roleError) {
-            console.error('Error fetching user role:', roleError);
-            navigate('/');
+            console.error('Error handling user role:', roleError);
+            // Default to buyer dashboard if role handling fails
+            navigate('/buyer-marketplace');
           }
         }, 100);
       } else {
