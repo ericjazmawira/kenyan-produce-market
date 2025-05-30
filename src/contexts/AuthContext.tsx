@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { isAuthorizedAdminEmail } from '@/utils/adminConfig';
 
 interface AuthContextType {
   user: User | null;
@@ -65,9 +66,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
       
-      // If no role found, try to create one based on user metadata
+      // If no role found, try to create one based on user metadata or admin status
       if (!data) {
-        const roleFromMetadata = user.user_metadata?.role || 'buyer';
+        let roleFromMetadata = user.user_metadata?.role || 'buyer';
+        
+        // Check if this user is an authorized admin
+        if (roleFromMetadata === 'admin' && !isAuthorizedAdminEmail(user.email || '')) {
+          console.warn(`User ${user.email} attempted to get admin role but is not authorized`);
+          roleFromMetadata = 'buyer'; // Downgrade to buyer if not authorized
+        }
         
         // Attempt to insert the role
         const { error: insertError } = await supabase
@@ -82,7 +89,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return roleFromMetadata; // Return the role from metadata even if insert fails
         }
         
+        // If user is an authorized admin, also add to admin_users table
+        if (roleFromMetadata === 'admin' && isAuthorizedAdminEmail(user.email || '')) {
+          await supabase
+            .from('admin_users')
+            .upsert({
+              user_id: user.id,
+              email: user.email || '',
+              can_add_admins: true, // Initial admins can add more admins
+              created_by: user.id
+            });
+        }
+        
         return roleFromMetadata;
+      }
+      
+      // Additional security check for admin role
+      if (data.role === 'admin' && !isAuthorizedAdminEmail(user.email || '')) {
+        console.warn(`User ${user.email} has admin role but is not in authorized list`);
+        // You might want to revoke the role here or take other action
+        return 'buyer'; // Return buyer role instead
       }
       
       return data.role || null;

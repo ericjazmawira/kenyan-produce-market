@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Leaf, User, ShoppingCart, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isAuthorizedAdminEmail } from "@/utils/adminConfig";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,7 +28,7 @@ const Auth = () => {
   const roles = [
     { id: "farmer", label: "Farmer", icon: User, description: "Sell your produce directly to buyers" },
     { id: "buyer", label: "Buyer", icon: ShoppingCart, description: "Purchase fresh produce from farmers" },
-    { id: "admin", label: "Admin", icon: Shield, description: "Platform administration" }
+    { id: "admin", label: "Admin", icon: Shield, description: "Platform administration (restricted)" }
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,22 +72,57 @@ const Auth = () => {
             if (!role) {
               role = data.user.user_metadata?.role || 'buyer';
               
+              // Security check for admin role
+              if (role === 'admin' && !isAuthorizedAdminEmail(data.user.email || '')) {
+                console.warn(`User ${data.user.email} attempted admin login but is not authorized`);
+                role = 'buyer'; // Downgrade to buyer
+                toast({
+                  title: "Access Denied",
+                  description: "You are not authorized for admin access.",
+                  variant: "destructive"
+                });
+              }
+              
               // Try to insert the role for existing users
               await supabase
                 .from('user_roles')
                 .insert({
                   user_id: data.user.id,
                   role: role
-                })
-                .single();
+                });
+
+              // If authorized admin, add to admin_users table
+              if (role === 'admin' && isAuthorizedAdminEmail(data.user.email || '')) {
+                await supabase
+                  .from('admin_users')
+                  .upsert({
+                    user_id: data.user.id,
+                    email: data.user.email || '',
+                    can_add_admins: true,
+                    created_by: data.user.id
+                  });
+              }
+            } else {
+              // Additional security check for existing admin users
+              if (role === 'admin' && !isAuthorizedAdminEmail(data.user.email || '')) {
+                console.warn(`User ${data.user.email} has admin role but is not authorized`);
+                toast({
+                  title: "Access Denied",
+                  description: "Your admin access has been revoked.",
+                  variant: "destructive"
+                });
+                role = 'buyer';
+              }
             }
 
             if (role === 'farmer') {
               navigate('/farmer-dashboard');
             } else if (role === 'buyer') {
               navigate('/buyer-marketplace');
+            } else if (role === 'admin') {
+              navigate('/'); // Redirect to main page for admin, they can access admin features from there
             } else {
-              navigate('/');
+              navigate('/buyer-marketplace');
             }
           } catch (roleError) {
             console.error('Error handling user role:', roleError);
@@ -100,6 +135,16 @@ const Auth = () => {
           toast({
             title: "Please select a role",
             description: "You must choose whether you're a farmer, buyer, or admin.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Check if user is trying to register as admin
+        if (selectedRole === 'admin' && !isAuthorizedAdminEmail(formData.email)) {
+          toast({
+            title: "Access Denied",
+            description: "You are not authorized to register as an admin.",
             variant: "destructive"
           });
           return;
@@ -163,22 +208,33 @@ const Auth = () => {
                   <div className="grid grid-cols-1 gap-2">
                     {roles.map((role) => {
                       const Icon = role.icon;
+                      const isDisabled = role.id === 'admin' && !isAuthorizedAdminEmail(formData.email);
                       return (
                         <button
                           key={role.id}
                           type="button"
-                          onClick={() => setSelectedRole(role.id)}
+                          disabled={isDisabled}
+                          onClick={() => !isDisabled && setSelectedRole(role.id)}
                           className={`p-3 border rounded-lg text-left transition-colors ${
                             selectedRole === role.id
                               ? "border-green-500 bg-green-50"
+                              : isDisabled
+                              ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
                               : "border-gray-200 hover:border-green-300"
                           }`}
                         >
                           <div className="flex items-center space-x-3">
-                            <Icon className="h-5 w-5 text-green-600" />
+                            <Icon className={`h-5 w-5 ${isDisabled ? 'text-gray-400' : 'text-green-600'}`} />
                             <div>
                               <div className="font-medium">{role.label}</div>
-                              <div className="text-sm text-gray-500">{role.description}</div>
+                              <div className="text-sm text-gray-500">
+                                {role.description}
+                                {role.id === 'admin' && isDisabled && (
+                                  <span className="block text-red-500 mt-1">
+                                    Not authorized for this email
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </button>
