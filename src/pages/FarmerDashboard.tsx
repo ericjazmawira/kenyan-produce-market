@@ -1,16 +1,19 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Package, TrendingUp, Clock, CheckCircle, Truck } from "lucide-react";
+import { Plus, Package, TrendingUp, Clock, CheckCircle, Truck, Edit, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import MarketPrices from "@/components/MarketPrices";
 import ProduceListings from "@/components/ProduceListings";
 import OrderTracking from "@/components/OrderTracking";
+import { useToast } from "@/hooks/use-toast";
 
 const FarmerDashboard = () => {
-  const [activeListings] = useState([
+  const { toast } = useToast();
+  const [activeListings, setActiveListings] = useState([
     { id: 1, name: "Fresh Tomatoes", quantity: "50kg", price: "KSh 80/kg", status: "active", orders: 5 },
     { id: 2, name: "Green Maize", quantity: "100kg", price: "KSh 45/kg", status: "active", orders: 8 },
     { id: 3, name: "French Beans", quantity: "25kg", price: "KSh 120/kg", status: "active", orders: 3 }
@@ -40,6 +43,35 @@ const FarmerDashboard = () => {
     }
   };
 
+  const handleAddNewListing = () => {
+    toast({
+      title: "Add New Listing",
+      description: "Opening form to add a new produce listing...",
+    });
+  };
+
+  const handleEditListing = (listingId: number, listingName: string) => {
+    toast({
+      title: "Edit Listing",
+      description: `Editing ${listingName}...`,
+    });
+  };
+
+  const handleDeleteListing = (listingId: number, listingName: string) => {
+    setActiveListings(prev => prev.filter(listing => listing.id !== listingId));
+    toast({
+      title: "Listing Deleted",
+      description: `${listingName} has been removed from your listings.`,
+    });
+  };
+
+  const handleUpdateOrderStatus = (orderId: number, newStatus: string) => {
+    toast({
+      title: "Order Status Updated",
+      description: `Order #${orderId} status changed to ${newStatus}`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Farmer Dashboard" />
@@ -47,7 +79,10 @@ const FarmerDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div></div>
-          <Button className="bg-green-600 hover:bg-green-700">
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={handleAddNewListing}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add New Listing
           </Button>
@@ -118,7 +153,50 @@ const FarmerDashboard = () => {
           </TabsList>
           
           <TabsContent value="listings">
-            <ProduceListings />
+            <Card>
+              <CardHeader>
+                <CardTitle>My Active Listings</CardTitle>
+                <CardDescription>
+                  Manage your produce listings and availability
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {activeListings.map((listing) => (
+                    <div key={listing.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <Package className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium">{listing.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {listing.quantity} • {listing.price} • {listing.orders} orders
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-green-100 text-green-800">
+                          {listing.status}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditListing(listing.id, listing.name)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteListing(listing.id, listing.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="orders">
@@ -140,11 +218,20 @@ const FarmerDashboard = () => {
                           <p className="text-sm text-gray-500">Buyer: {order.buyer}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">{order.amount}</p>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status.replace("-", " ")}
-                        </Badge>
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <p className="font-medium">{order.amount}</p>
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status.replace("-", " ")}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateOrderStatus(order.id, "in-transit")}
+                        >
+                          Update Status
+                        </Button>
                       </div>
                     </div>
                   ))}

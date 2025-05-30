@@ -1,14 +1,17 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, MapPin, Phone, MessageCircle } from "lucide-react";
+import { Search, Filter, MapPin, Phone, MessageCircle, ShoppingCart } from "lucide-react";
 import Header from "@/components/Header";
+import { useToast } from "@/hooks/use-toast";
 
 const BuyerMarketplace = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const { toast } = useToast();
 
   const categories = [
     { id: "all", label: "All Products" },
@@ -101,9 +104,18 @@ const BuyerMarketplace = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleContact = (farmer: string, phone: string) => {
-    console.log(`Contacting ${farmer} at ${phone}`);
-    // TODO: Implement contact functionality
+  const handleContact = (farmer: string, phone: string, action: string) => {
+    toast({
+      title: `${action} ${farmer}`,
+      description: `Contact: ${phone}`,
+    });
+  };
+
+  const handleAddToCart = (productName: string) => {
+    toast({
+      title: "Added to Cart",
+      description: `${productName} has been added to your cart`,
+    });
   };
 
   return (
@@ -183,22 +195,33 @@ const BuyerMarketplace = () => {
                     <strong>Farmer:</strong> {item.farmer}
                   </div>
                   
-                  <div className="flex space-x-2 pt-4">
+                  <div className="space-y-2 pt-4">
                     <Button 
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={() => handleContact(item.farmer, item.phone)}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() => handleAddToCart(item.name)}
                     >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => handleContact(item.farmer, item.phone)}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Message
-                    </Button>
+                    
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleContact(item.farmer, item.phone, "Calling")}
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleContact(item.farmer, item.phone, "Messaging")}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

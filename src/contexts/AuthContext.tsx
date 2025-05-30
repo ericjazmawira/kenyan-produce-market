@@ -89,18 +89,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return roleFromMetadata; // Return the role from metadata even if insert fails
         }
         
-        // If user is an authorized admin, also add to admin_users table
-        if (roleFromMetadata === 'admin' && isAuthorizedAdminEmail(user.email || '')) {
-          await supabase
-            .from('admin_users')
-            .upsert({
-              user_id: user.id,
-              email: user.email || '',
-              can_add_admins: true, // Initial admins can add more admins
-              created_by: user.id
-            });
-        }
-        
         return roleFromMetadata;
       }
       

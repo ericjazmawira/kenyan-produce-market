@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -90,18 +91,6 @@ const Auth = () => {
                   user_id: data.user.id,
                   role: role
                 });
-
-              // If authorized admin, add to admin_users table
-              if (role === 'admin' && isAuthorizedAdminEmail(data.user.email || '')) {
-                await supabase
-                  .from('admin_users')
-                  .upsert({
-                    user_id: data.user.id,
-                    email: data.user.email || '',
-                    can_add_admins: true,
-                    created_by: data.user.id
-                  });
-              }
             } else {
               // Additional security check for existing admin users
               if (role === 'admin' && !isAuthorizedAdminEmail(data.user.email || '')) {
