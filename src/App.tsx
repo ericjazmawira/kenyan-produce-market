@@ -8,8 +8,14 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
+import MarketPrices from "./pages/MarketPrices";
+import Messages from "./pages/Messages";
+import Support from "./pages/Support";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import BuyerMarketplace from "./pages/BuyerMarketplace";
+import TransporterDashboard from "./pages/TransporterDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +32,38 @@ const App = () => (
             <Route path="/login" element={<Auth />} />
             <Route path="/register" element={<Auth />} />
             <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/orders" 
+              element={
+                <ProtectedRoute>
+                  <Orders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/market-prices" 
+              element={<MarketPrices />} 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/support" 
+              element={<Support />} 
+            />
+            <Route 
               path="/farmer-dashboard" 
               element={
                 <ProtectedRoute requiredRole="farmer">
@@ -38,6 +76,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="buyer">
                   <BuyerMarketplace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transporter-dashboard" 
+              element={
+                <ProtectedRoute requiredRole="transporter">
+                  <TransporterDashboard />
                 </ProtectedRoute>
               } 
             />

@@ -1,151 +1,283 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf, Users, TrendingUp, Truck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { Leaf, Users, Truck, TrendingUp, MessageSquare, HelpCircle, ShoppingCart, Package, User, DollarSign } from "lucide-react";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/farmer-dashboard');
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Leaf className="h-8 w-8 text-green-600" />
               <span className="text-2xl font-bold text-green-800">Farm2Table</span>
             </div>
-            <div className="flex space-x-4">
+            
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link to="/market-prices" className="text-gray-600 hover:text-green-600 transition-colors">
+                Market Prices
+              </Link>
+              <Link to="/support" className="text-gray-600 hover:text-green-600 transition-colors">
+                Support
+              </Link>
               {user ? (
-                <Link to="/farmer-dashboard">
-                  <Button className="bg-green-600 hover:bg-green-700">Dashboard</Button>
-                </Link>
+                <div className="flex items-center space-x-4">
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm">Profile</Button>
+                  </Link>
+                  <Button onClick={signOut} variant="outline" size="sm">
+                    Logout
+                  </Button>
+                </div>
               ) : (
-                <>
+                <div className="flex items-center space-x-4">
                   <Link to="/login">
-                    <Button variant="outline">Login</Button>
+                    <Button variant="outline" size="sm">Login</Button>
                   </Link>
                   <Link to="/register">
-                    <Button className="bg-green-600 hover:bg-green-700">Get Started</Button>
+                    <Button size="sm">Sign Up</Button>
                   </Link>
-                </>
+                </div>
               )}
-            </div>
+            </nav>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Connecting Kenyan <span className="text-green-600">Farmers</span> to <span className="text-orange-500">Markets</span>
+            Fresh Produce,
+            <span className="text-green-600"> Direct Connection</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Empowering smallholder farmers with direct market access, real-time pricing, and seamless buyer connections.
+            Farm2Table connects farmers with buyers and transporters across Kenya, 
+            ensuring fresh produce reaches markets efficiently while supporting local agriculture.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register?role=farmer">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 px-8">
-                I'm a Farmer
-              </Button>
-            </Link>
-            <Link to="/register?role=buyer">
-              <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 px-8">
-                I'm a Buyer
-              </Button>
-            </Link>
-          </div>
+          <Button 
+            onClick={handleGetStarted}
+            size="lg" 
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+          >
+            Get Started Today
+          </Button>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Farm2Table?</h2>
-            <p className="text-xl text-gray-600">Built specifically for the Kenyan agricultural market</p>
+      {/* Features Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Everything You Need</h2>
+          <p className="text-gray-600">Comprehensive tools for farmers, buyers, and transporters</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Users className="h-8 w-8 text-green-600 mb-2" />
+              <CardTitle>For Farmers</CardTitle>
+              <CardDescription>List your produce and connect with buyers</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Manage produce listings</li>
+                <li>• Track orders and sales</li>
+                <li>• Real-time market prices</li>
+                <li>• Direct buyer communication</li>
+              </ul>
+              {user ? (
+                <Link to="/farmer-dashboard" className="block mt-4">
+                  <Button className="w-full">Go to Dashboard</Button>
+                </Link>
+              ) : (
+                <Link to="/register" className="block mt-4">
+                  <Button className="w-full">Join as Farmer</Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <ShoppingCart className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>For Buyers</CardTitle>
+              <CardDescription>Source fresh produce directly from farms</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Browse available produce</li>
+                <li>• Compare prices and quality</li>
+                <li>• Order tracking system</li>
+                <li>• Direct farmer contact</li>
+              </ul>
+              {user ? (
+                <Link to="/buyer-marketplace" className="block mt-4">
+                  <Button className="w-full">Browse Marketplace</Button>
+                </Link>
+              ) : (
+                <Link to="/register" className="block mt-4">
+                  <Button className="w-full">Join as Buyer</Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Truck className="h-8 w-8 text-purple-600 mb-2" />
+              <CardTitle>For Transporters</CardTitle>
+              <CardDescription>Find delivery opportunities and manage logistics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Available delivery jobs</li>
+                <li>• Route optimization</li>
+                <li>• Earnings tracking</li>
+                <li>• Real-time job updates</li>
+              </ul>
+              {user ? (
+                <Link to="/transporter-dashboard" className="block mt-4">
+                  <Button className="w-full">View Jobs</Button>
+                </Link>
+              ) : (
+                <Link to="/register" className="block mt-4">
+                  <Button className="w-full">Join as Transporter</Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Quick Access Section */}
+      {user && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Quick Access</h2>
+            <p className="text-gray-600">Jump to the tools you need most</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center border-green-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <CardTitle className="text-green-800">Direct Connection</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Connect farmers directly with buyers, eliminating middlemen and increasing profits.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-green-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <TrendingUp className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-                <CardTitle className="text-green-800">Real-time Prices</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Access current market prices for tomatoes, maize, beans, and other key Kenyan produce.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-green-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Truck className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <CardTitle className="text-green-800">Order Tracking</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Track orders from placement to delivery with real-time status updates.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-green-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Leaf className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <CardTitle className="text-green-800">Mobile Friendly</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Designed for smartphones and feature phones, accessible to all farmers.
-                </CardDescription>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <Link to="/profile" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <User className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Profile</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/orders" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <Package className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Orders</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/market-prices" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <DollarSign className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Prices</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/messages" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <MessageSquare className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Messages</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/support" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <HelpCircle className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Support</p>
+                </CardContent>
+              </Card>
+            </Link>
+            
+            <Link to="/farmer-dashboard" className="group">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <TrendingUp className="h-8 w-8 text-gray-600 mx-auto mb-2 group-hover:text-green-600 transition-colors" />
+                  <p className="text-sm font-medium">Dashboard</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-green-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to Transform Your Agricultural Business?</h2>
-          <p className="text-xl text-green-100 mb-8">
-            Join thousands of Kenyan farmers and buyers already using Farm2Table
-          </p>
-          <Link to="/register">
-            <Button size="lg" className="bg-white text-green-600 hover:bg-gray-50 px-8">
-              Start Today - It's Free
-            </Button>
-          </Link>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Leaf className="h-6 w-6 text-green-400" />
-            <span className="text-xl font-bold">Farm2Table Kenya</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Leaf className="h-6 w-6 text-green-400" />
+                <span className="text-xl font-bold">Farm2Table</span>
+              </div>
+              <p className="text-gray-400">
+                Connecting Kenya's agricultural community for fresh, efficient produce trading.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Platform</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/farmer-dashboard" className="hover:text-white transition-colors">For Farmers</Link></li>
+                <li><Link to="/buyer-marketplace" className="hover:text-white transition-colors">For Buyers</Link></li>
+                <li><Link to="/transporter-dashboard" className="hover:text-white transition-colors">For Transporters</Link></li>
+                <li><Link to="/market-prices" className="hover:text-white transition-colors">Market Prices</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link to="/support" className="hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link to="/support" className="hover:text-white transition-colors">Contact Us</Link></li>
+                <li><a href="tel:+254700123456" className="hover:text-white transition-colors">+254 700 123 456</a></li>
+                <li><a href="mailto:help@farm2table.co.ke" className="hover:text-white transition-colors">help@farm2table.co.ke</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+              </ul>
+            </div>
           </div>
-          <p className="text-gray-400">Empowering smallholder farmers across Kenya</p>
+          
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Farm2Table. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>
