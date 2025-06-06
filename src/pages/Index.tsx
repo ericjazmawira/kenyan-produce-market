@@ -6,12 +6,33 @@ import { Link, useNavigate } from "react-router-dom";
 import { Leaf, Users, Truck, TrendingUp, MessageSquare, HelpCircle, ShoppingCart, Package, User, DollarSign } from "lucide-react";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, getUserRole } = useAuth();
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const role = await getUserRole();
+        setUserRole(role);
+      }
+    };
+    fetchUserRole();
+  }, [user, getUserRole]);
 
   const handleGetStarted = () => {
     if (user) {
-      navigate('/farmer-dashboard');
+      if (userRole === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (userRole === 'farmer') {
+        navigate('/farmer-dashboard');
+      } else if (userRole === 'buyer') {
+        navigate('/buyer-marketplace');
+      } else if (userRole === 'transporter') {
+        navigate('/transporter-dashboard');
+      } else {
+        navigate('/farmer-dashboard');
+      }
     } else {
       navigate('/login');
     }
@@ -37,6 +58,14 @@ const Index = () => {
               </Link>
               {user ? (
                 <div className="flex items-center space-x-4">
+                  {userRole === 'admin' && (
+                    <Link to="/admin-dashboard">
+                      <Button variant="outline" size="sm" className="text-purple-600 border-purple-600 hover:bg-purple-50">
+                        <Shield className="h-4 w-4 mr-1" />
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/profile">
                     <Button variant="outline" size="sm">Profile</Button>
                   </Link>
@@ -174,6 +203,17 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {userRole === 'admin' && (
+              <Link to="/admin-dashboard" className="group">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <Shield className="h-8 w-8 text-purple-600 mx-auto mb-2 group-hover:text-purple-700 transition-colors" />
+                    <p className="text-sm font-medium">Admin</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+            
             <Link to="/profile" className="group">
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">

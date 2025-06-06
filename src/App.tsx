@@ -16,6 +16,7 @@ import Support from "./pages/Support";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import BuyerMarketplace from "./pages/BuyerMarketplace";
 import TransporterDashboard from "./pages/TransporterDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
