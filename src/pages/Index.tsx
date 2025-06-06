@@ -1,9 +1,9 @@
-
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { Leaf, Users, Truck, TrendingUp, MessageSquare, HelpCircle, ShoppingCart, Package, User, DollarSign } from "lucide-react";
+import { Leaf, Users, Truck, TrendingUp, MessageSquare, HelpCircle, ShoppingCart, Package, User, DollarSign, Shield } from "lucide-react";
 
 const Index = () => {
   const { user, signOut, getUserRole } = useAuth();
