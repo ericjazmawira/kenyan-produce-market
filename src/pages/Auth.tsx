@@ -109,7 +109,7 @@ const Auth = () => {
             } else if (role === 'buyer') {
               navigate('/buyer-marketplace');
             } else if (role === 'admin') {
-              navigate('/'); // Redirect to main page for admin, they can access admin features from there
+              navigate('/admin-dashboard');
             } else {
               navigate('/buyer-marketplace');
             }
@@ -120,12 +120,14 @@ const Auth = () => {
           }
         }, 100);
       } else {
+        // Registration flow
         if (!selectedRole) {
           toast({
             title: "Please select a role",
             description: "You must choose whether you're a farmer, buyer, or admin.",
             variant: "destructive"
           });
+          setLoading(false);
           return;
         }
 
@@ -136,6 +138,7 @@ const Auth = () => {
             description: "You are not authorized to register as an admin.",
             variant: "destructive"
           });
+          setLoading(false);
           return;
         }
 
@@ -148,23 +151,48 @@ const Auth = () => {
               phone: formData.phone,
               location: formData.location,
               role: selectedRole
-            }
+            },
+            emailRedirectTo: `${window.location.origin}/`
           }
         });
 
         if (error) throw error;
 
+        if (data.user) {
+          // Insert user role into the database
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              role: selectedRole
+            });
+
+          if (roleError) {
+            console.error('Error creating user role:', roleError);
+          }
+        }
+
         toast({
           title: "Account created!",
-          description: "Your account has been created successfully. You can now log in.",
+          description: "Please check your email to confirm your account before logging in.",
         });
 
         setIsLogin(true);
+        // Clear form data
+        setFormData({
+          email: "",
+          password: "",
+          fullName: "",
+          phone: "",
+          location: ""
+        });
+        setSelectedRole("");
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -292,6 +320,7 @@ const Auth = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
+                minLength={6}
               />
             </div>
 
