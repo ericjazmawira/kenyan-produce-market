@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Leaf, Users, Truck, TrendingUp, MessageSquare, HelpCircle, ShoppingCart, Package, User, DollarSign, Shield } from "lucide-react";
 
 const Index = () => {
-  const { user, signOut, getUserRole } = useAuth();
+  const { user, getUserRole } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -40,54 +41,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Leaf className="h-8 w-8 text-green-600" />
-              <span className="text-2xl font-bold text-green-800">Farm2Table</span>
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/market-prices" className="text-gray-600 hover:text-green-600 transition-colors">
-                Market Prices
-              </Link>
-              <Link to="/support" className="text-gray-600 hover:text-green-600 transition-colors">
-                Support
-              </Link>
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  {userRole === 'admin' && (
-                    <Link to="/admin-dashboard">
-                      <Button variant="outline" size="sm" className="text-purple-600 border-purple-600 hover:bg-purple-50">
-                        <Shield className="h-4 w-4 mr-1" />
-                        Admin
-                      </Button>
-                    </Link>
-                  )}
-                  <Link to="/profile">
-                    <Button variant="outline" size="sm">Profile</Button>
-                  </Link>
-                  <Button onClick={signOut} variant="outline" size="sm">
-                    Logout
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link to="/login">
-                    <Button variant="outline" size="sm">Login</Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button size="sm">Sign Up</Button>
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
