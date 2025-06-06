@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,21 +8,25 @@ import Header from "@/components/Header";
 import MarketPrices from "@/components/MarketPrices";
 import ProduceListings from "@/components/ProduceListings";
 import OrderTracking from "@/components/OrderTracking";
+import EditListingDialog from "@/components/EditListingDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const FarmerDashboard = () => {
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState([
-    { id: 1, name: "Fresh Tomatoes", quantity: "50kg", price: "KSh 80/kg", status: "active", orders: 5 },
-    { id: 2, name: "Green Maize", quantity: "100kg", price: "KSh 45/kg", status: "active", orders: 8 },
-    { id: 3, name: "French Beans", quantity: "25kg", price: "KSh 120/kg", status: "active", orders: 3 }
+    { id: 1, name: "Fresh Tomatoes", quantity: "50kg", price: "KSh 80/kg", status: "active", orders: 5, description: "Farm-fresh tomatoes, harvested yesterday", category: "vegetables" },
+    { id: 2, name: "Green Maize", quantity: "100kg", price: "KSh 45/kg", status: "active", orders: 8, description: "Sweet green maize, perfect for roasting", category: "grains" },
+    { id: 3, name: "French Beans", quantity: "25kg", price: "KSh 120/kg", status: "active", orders: 3, description: "Premium quality French beans", category: "vegetables" }
   ]);
 
-  const [recentOrders] = useState([
+  const [recentOrders, setRecentOrders] = useState([
     { id: 1, product: "Fresh Tomatoes", buyer: "Nairobi Market", amount: "KSh 4,000", status: "pending" },
     { id: 2, product: "Green Maize", buyer: "Local Restaurant", amount: "KSh 2,250", status: "in-transit" },
     { id: 3, product: "French Beans", buyer: "Export Company", amount: "KSh 3,600", status: "delivered" }
   ]);
+
+  const [editingListing, setEditingListing] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -51,10 +54,19 @@ const FarmerDashboard = () => {
   };
 
   const handleEditListing = (listingId: number, listingName: string) => {
-    toast({
-      title: "Edit Listing",
-      description: `Editing ${listingName}...`,
-    });
+    const listing = activeListings.find(l => l.id === listingId);
+    if (listing) {
+      setEditingListing(listing);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveListing = (updatedListing: any) => {
+    setActiveListings(prev => 
+      prev.map(listing => 
+        listing.id === updatedListing.id ? updatedListing : listing
+      )
+    );
   };
 
   const handleDeleteListing = (listingId: number, listingName: string) => {
@@ -66,6 +78,11 @@ const FarmerDashboard = () => {
   };
 
   const handleUpdateOrderStatus = (orderId: number, newStatus: string) => {
+    setRecentOrders(prev => 
+      prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
     toast({
       title: "Order Status Updated",
       description: `Order #${orderId} status changed to ${newStatus}`,
@@ -153,50 +170,7 @@ const FarmerDashboard = () => {
           </TabsList>
           
           <TabsContent value="listings">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Active Listings</CardTitle>
-                <CardDescription>
-                  Manage your produce listings and availability
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {activeListings.map((listing) => (
-                    <div key={listing.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Package className="h-5 w-5 text-green-600" />
-                        <div>
-                          <p className="font-medium">{listing.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {listing.quantity} • {listing.price} • {listing.orders} orders
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className="bg-green-100 text-green-800">
-                          {listing.status}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditListing(listing.id, listing.name)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteListing(listing.id, listing.name)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <ProduceListings />
           </TabsContent>
           
           <TabsContent value="orders">
@@ -249,6 +223,16 @@ const FarmerDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <EditListingDialog
+        listing={editingListing}
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setEditingListing(null);
+        }}
+        onSave={handleSaveListing}
+      />
     </div>
   );
 };

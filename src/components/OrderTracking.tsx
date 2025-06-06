@@ -1,11 +1,13 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Truck, CheckCircle, Package, Phone, MessageCircle, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const OrderTracking = () => {
-  const orders = [
+  const { toast } = useToast();
+  const [orders, setOrders] = useState([
     {
       id: "ORD-001",
       product: "Fresh Tomatoes",
@@ -54,7 +56,26 @@ const OrderTracking = () => {
       buyerPhone: "+254 700 777 888",
       deliveryAddress: "City Market, Nairobi"
     }
-  ];
+  ]);
+
+  const updateOrderStatus = (orderId: string, newStatus: string) => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+    toast({
+      title: "Order Status Updated",
+      description: `Order ${orderId} status changed to ${newStatus.replace("-", " ")}`,
+    });
+  };
+
+  const handleContactBuyer = (buyer: string, phone: string, action: string) => {
+    toast({
+      title: `${action} ${buyer}`,
+      description: `Contact: ${phone}`,
+    });
+  };
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -191,17 +212,40 @@ const OrderTracking = () => {
 
                 {/* Action Buttons */}
                 <div className="flex space-x-2 pt-4 border-t">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleContactBuyer(order.buyer, order.buyerPhone, "Calling")}
+                  >
                     <Phone className="h-4 w-4 mr-2" />
                     Call Buyer
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleContactBuyer(order.buyer, order.buyerPhone, "Messaging")}
+                  >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message
                   </Button>
                   {order.status === "pending" && (
-                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => updateOrderStatus(order.id, "in-transit")}
+                    >
                       Mark as Shipped
+                    </Button>
+                  )}
+                  {order.status === "in-transit" && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => updateOrderStatus(order.id, "delivered")}
+                    >
+                      Mark as Delivered
                     </Button>
                   )}
                 </div>

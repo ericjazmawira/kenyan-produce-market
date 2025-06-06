@@ -1,17 +1,20 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, MapPin, Phone, MessageCircle, ShoppingCart } from "lucide-react";
 import Header from "@/components/Header";
+import Cart from "@/components/Cart";
+import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 
 const BuyerMarketplace = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const { toast } = useToast();
+  const { addToCart, cartItems } = useCart();
 
   const categories = [
     { id: "all", label: "All Products" },
@@ -111,10 +114,19 @@ const BuyerMarketplace = () => {
     });
   };
 
-  const handleAddToCart = (productName: string) => {
+  const handleAddToCart = (item: any) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      farmer: item.farmer,
+      price: item.price,
+      maxQuantity: item.quantity,
+      location: item.location,
+      phone: item.phone
+    });
     toast({
       title: "Added to Cart",
-      description: `${productName} has been added to your cart`,
+      description: `${item.name} has been added to your cart`,
     });
   };
 
@@ -123,120 +135,140 @@ const BuyerMarketplace = () => {
       <Header title="Marketplace" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div></div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search produce, farmers, location..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
+        <Tabs defaultValue="marketplace" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+            <TabsTrigger value="cart" className="relative">
+              Cart
+              {cartItems.length > 0 && (
+                <Badge className="ml-2 bg-green-600 text-white">
+                  {cartItems.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="marketplace">
+            <div className="flex justify-between items-center mb-8">
+              <div></div>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search produce, farmers, location..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
+                <Button variant="outline">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+              </div>
             </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-          </div>
-        </div>
 
-        {/* Category Filters */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category.id)}
-                className={selectedCategory === category.id ? "bg-green-600 hover:bg-green-700" : ""}
-              >
-                {category.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+            {/* Category Filters */}
+            <div className="mb-8">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={selectedCategory === category.id ? "bg-green-600 hover:bg-green-700" : ""}
+                  >
+                    {category.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing {filteredProduce.length} of {produceListings.length} products
-          </p>
-        </div>
+            {/* Results Count */}
+            <div className="mb-6">
+              <p className="text-gray-600">
+                Showing {filteredProduce.length} of {produceListings.length} products
+              </p>
+            </div>
 
-        {/* Produce Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProduce.map((item) => (
-            <Card key={item.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl">{item.image}</div>
-                  <Badge className="bg-green-100 text-green-800">
-                    {item.category}
-                  </Badge>
-                </div>
-                <CardTitle className="text-xl">{item.name}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-green-600">{item.price}</span>
-                    <span className="text-sm text-gray-500">{item.quantity}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4" />
-                    <span>{item.location}</span>
-                  </div>
-                  
-                  <div className="text-sm text-gray-600">
-                    <strong>Farmer:</strong> {item.farmer}
-                  </div>
-                  
-                  <div className="space-y-2 pt-4">
-                    <Button 
-                      className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={() => handleAddToCart(item.name)}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                    
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleContact(item.farmer, item.phone, "Calling")}
-                      >
-                        <Phone className="h-4 w-4 mr-2" />
-                        Call
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => handleContact(item.farmer, item.phone, "Messaging")}
-                      >
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Message
-                      </Button>
+            {/* Produce Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProduce.map((item) => (
+                <Card key={item.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="text-4xl">{item.image}</div>
+                      <Badge className="bg-green-100 text-green-800">
+                        {item.category}
+                      </Badge>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    <CardTitle className="text-xl">{item.name}</CardTitle>
+                    <CardDescription>{item.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-2xl font-bold text-green-600">{item.price}</span>
+                        <span className="text-sm text-gray-500">{item.quantity}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <MapPin className="h-4 w-4" />
+                        <span>{item.location}</span>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600">
+                        <strong>Farmer:</strong> {item.farmer}
+                      </div>
+                      
+                      <div className="space-y-2 pt-4">
+                        <Button 
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Add to Cart
+                        </Button>
+                        
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleContact(item.farmer, item.phone, "Calling")}
+                          >
+                            <Phone className="h-4 w-4 mr-2" />
+                            Call
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleContact(item.farmer, item.phone, "Messaging")}
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-        {/* No Results */}
-        {filteredProduce.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
-          </div>
-        )}
+            {/* No Results */}
+            {filteredProduce.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No products found</h3>
+                <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="cart">
+            <Cart />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
