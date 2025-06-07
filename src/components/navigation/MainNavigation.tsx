@@ -38,7 +38,7 @@ const MainNavigation = () => {
     fetchRole();
   }, [user, getUserRole]);
 
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = (cartItems || []).reduce((total, item) => total + item.quantity, 0);
 
   const getNavigationItems = () => {
     const baseItems = [
