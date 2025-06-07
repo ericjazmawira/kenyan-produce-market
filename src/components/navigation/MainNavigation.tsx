@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +22,7 @@ import {
 
 const MainNavigation = () => {
   const { user, signOut, getUserRole } = useAuth();
-  const { items } = useCart();
+  const { cartItems } = useCart();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -39,7 +38,7 @@ const MainNavigation = () => {
     fetchRole();
   }, [user, getUserRole]);
 
-  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const getNavigationItems = () => {
     const baseItems = [
