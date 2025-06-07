@@ -2,9 +2,9 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import EditListingDialog from "@/components/EditListingDialog";
-import StatsCards from "@/components/dashboard/StatsCards";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardTabs from "@/components/dashboard/DashboardTabs";
+import { StatsCards } from "@/components/dashboard/StatsCards";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { useToast } from "@/hooks/use-toast";
 
 const FarmerDashboard = () => {
@@ -72,14 +72,18 @@ const FarmerDashboard = () => {
       <Header title="Farmer Dashboard" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardHeader onAddNewListing={handleAddNewListing} />
+        <DashboardHeader />
         
-        <StatsCards activeListingsCount={activeListings.length} />
+        <div className="mt-8">
+          <StatsCards />
+        </div>
 
-        <DashboardTabs 
-          orders={recentOrders}
-          onUpdateOrderStatus={handleUpdateOrderStatus}
-        />
+        <div className="mt-8">
+          <DashboardTabs 
+            activeTab="overview"
+            setActiveTab={() => {}}
+          />
+        </div>
       </div>
 
       <EditListingDialog
