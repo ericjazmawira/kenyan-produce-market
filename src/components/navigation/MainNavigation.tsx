@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -5,6 +6,13 @@ import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { 
   Leaf, 
   Menu, 
@@ -17,7 +25,11 @@ import {
   HelpCircle,
   LogOut,
   TrendingUp,
-  Truck
+  Truck,
+  ChevronDown,
+  UserPlus,
+  DollarSign,
+  MessageSquare
 } from "lucide-react";
 
 const MainNavigation = () => {
@@ -57,7 +69,7 @@ const MainNavigation = () => {
       ...baseItems,
       { href: "/profile", label: "My Account", icon: User },
       { href: "/orders", label: "Orders", icon: Package },
-      { href: "/messages", label: "Messages", icon: HelpCircle },
+      { href: "/messages", label: "Messages", icon: MessageSquare },
       { href: "/support", label: "Help", icon: HelpCircle }
     ];
 
@@ -94,36 +106,121 @@ const MainNavigation = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2 hover:scale-105 transition-transform">
           <Leaf className="h-8 w-8 text-green-600" />
           <span className="text-2xl font-bold text-green-800">Farm2Table</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          {navigationItems.map((item) => (
+        <nav className="hidden md:flex items-center space-x-8">
+          <Link
+            to="/"
+            className={`text-sm font-medium transition-colors hover:text-green-600 ${
+              isActive("/") 
+                ? "text-green-600" 
+                : "text-muted-foreground"
+            }`}
+          >
+            Home
+          </Link>
+
+          {/* Platform Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-muted-foreground hover:text-green-600 transition-colors">
+              Platform
+              <ChevronDown className="ml-1 h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/farmer-dashboard" className="flex items-center">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  For Farmers
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/buyer-marketplace" className="flex items-center">
+                  <Store className="mr-2 h-4 w-4" />
+                  For Buyers
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/transporter-dashboard" className="flex items-center">
+                  <Truck className="mr-2 h-4 w-4" />
+                  For Transporters
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Link
+            to="/market-prices"
+            className={`text-sm font-medium transition-colors hover:text-green-600 ${
+              isActive("/market-prices") 
+                ? "text-green-600" 
+                : "text-muted-foreground"
+            }`}
+          >
+            Market Prices
+          </Link>
+
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center text-sm font-medium text-muted-foreground hover:text-green-600 transition-colors">
+                Account
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/orders" className="flex items-center">
+                    <Package className="mr-2 h-4 w-4" />
+                    Orders
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/messages" className="flex items-center">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Messages
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/support" className="flex items-center">
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Support
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {!user && (
             <Link
-              key={item.href}
-              to={item.href}
+              to="/support"
               className={`text-sm font-medium transition-colors hover:text-green-600 ${
-                isActive(item.href) 
+                isActive("/support") 
                   ? "text-green-600" 
                   : "text-muted-foreground"
               }`}
             >
-              {item.label}
+              Help
             </Link>
-          ))}
+          )}
         </nav>
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-4">
           {user && userRole === "buyer" && (
             <Link to="/buyer-marketplace" className="relative">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="hover:bg-green-50 hover:border-green-300">
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Cart
                 {cartItemCount > 0 && (
@@ -140,7 +237,7 @@ const MainNavigation = () => {
           
           {user && userRole === "farmer" && (
             <Link to="/farmer-dashboard">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Listing
               </Button>
@@ -148,17 +245,22 @@ const MainNavigation = () => {
           )}
 
           {user ? (
-            <Button variant="outline" size="sm" onClick={signOut}>
+            <Button variant="outline" size="sm" onClick={signOut} className="hover:bg-red-50 hover:border-red-300 hover:text-red-600">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
           ) : (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <Link to="/login">
-                <Button variant="outline" size="sm">Login</Button>
+                <Button variant="outline" size="sm" className="hover:bg-green-50 hover:border-green-300">
+                  Login
+                </Button>
               </Link>
               <Link to="/register">
-                <Button size="sm">Sign Up</Button>
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Join Now
+                </Button>
               </Link>
             </div>
           )}
@@ -242,7 +344,10 @@ const MainNavigation = () => {
                       <Button variant="outline" className="w-full">Login</Button>
                     </Link>
                     <Link to="/register" onClick={handleNavClick}>
-                      <Button className="w-full">Sign Up</Button>
+                      <Button className="w-full bg-green-600 hover:bg-green-700">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Join Now
+                      </Button>
                     </Link>
                   </div>
                 )}
