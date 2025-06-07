@@ -1,84 +1,54 @@
 
-import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Users, 
-  Package, 
-  ShoppingCart, 
-  MessageSquare,
-  Settings,
-  BarChart3
-} from "lucide-react";
-import { AdminManagement } from "@/components/AdminManagement";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Package, TrendingUp, AlertCircle, CheckCircle, Clock, Truck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StatsCards } from "./StatsCards";
+import { RecentOrdersTab } from "./RecentOrdersTab";
+import AdminManagement from "@/components/AdminManagement";
 import { ProduceListings } from "@/components/ProduceListings";
 import { OrderTracking } from "@/components/OrderTracking";
-import { RecentOrdersTab } from "./RecentOrdersTab";
 
-interface DashboardTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
-
-export const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
+export const DashboardTabs = () => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-6">
-        <TabsTrigger value="overview" className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4" />
-          Overview
-        </TabsTrigger>
-        <TabsTrigger value="users" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Users
-        </TabsTrigger>
-        <TabsTrigger value="listings" className="flex items-center gap-2">
-          <Package className="h-4 w-4" />
-          Listings
-        </TabsTrigger>
-        <TabsTrigger value="orders" className="flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4" />
-          Orders
-        </TabsTrigger>
-        <TabsTrigger value="messages" className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" />
-          Messages
-        </TabsTrigger>
-        <TabsTrigger value="settings" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          Settings
-        </TabsTrigger>
+    <Tabs defaultValue="overview" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-5">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="users">Users</TabsTrigger>
+        <TabsTrigger value="listings">Listings</TabsTrigger>
+        <TabsTrigger value="orders">Orders</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
+        <StatsCards />
         <RecentOrdersTab />
       </TabsContent>
 
-      <TabsContent value="users" className="space-y-6">
+      <TabsContent value="users">
         <AdminManagement />
       </TabsContent>
 
-      <TabsContent value="listings" className="space-y-6">
+      <TabsContent value="listings">
         <ProduceListings />
       </TabsContent>
 
-      <TabsContent value="orders" className="space-y-6">
+      <TabsContent value="orders">
         <OrderTracking />
       </TabsContent>
 
-      <TabsContent value="messages" className="space-y-6">
-        <div className="text-center py-12">
-          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Messages & Support</h3>
-          <p className="text-gray-500">Support messages and reports will appear here.</p>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="settings" className="space-y-6">
-        <div className="text-center py-12">
-          <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Platform Settings</h3>
-          <p className="text-gray-500">Configure delivery options, fees, and platform settings.</p>
-        </div>
+      <TabsContent value="analytics">
+        <Card>
+          <CardHeader>
+            <CardTitle>Analytics Dashboard</CardTitle>
+            <CardDescription>Detailed analytics and insights</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Analytics features coming soon...</p>
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
