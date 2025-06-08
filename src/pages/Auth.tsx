@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, User, ShoppingCart, Shield, Truck } from "lucide-react";
+import { Leaf, User, ShoppingCart, Shield, Truck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isAuthorizedAdminEmail } from "@/utils/adminConfig";
+import RoleSelector from "@/components/RoleSelector";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [searchParams] = useSearchParams();
   const [selectedRole, setSelectedRole] = useState(searchParams.get("role") || "");
+  const [showRoleSelector, setShowRoleSelector] = useState(!isLogin && !selectedRole);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -35,6 +37,24 @@ const Auth = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRoleSelect = (role: string) => {
+    setSelectedRole(role);
+    setShowRoleSelector(false);
+  };
+
+  const handleModeSwitch = () => {
+    setIsLogin(!isLogin);
+    if (!isLogin) {
+      // Switching to login mode
+      setShowRoleSelector(false);
+    } else {
+      // Switching to register mode
+      if (!selectedRole) {
+        setShowRoleSelector(true);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -203,6 +223,37 @@ const Auth = () => {
     }
   };
 
+  // Show role selector for registration
+  if (!isLogin && showRoleSelector) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-6xl">
+          <div className="flex items-center justify-center space-x-2 mb-8">
+            <Leaf className="h-8 w-8 text-green-600" />
+            <span className="text-2xl font-bold text-green-800">Farm2Table</span>
+          </div>
+          
+          <RoleSelector 
+            onRoleSelect={handleRoleSelect} 
+            selectedRole={selectedRole}
+          />
+          
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <button 
+                onClick={handleModeSwitch}
+                className="text-green-600 hover:text-green-700 font-medium"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md">
@@ -215,54 +266,46 @@ const Auth = () => {
             {isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
           <CardDescription>
-            {isLogin ? "Sign in to your account" : "Join the Farm2Table community"}
+            {isLogin ? "Sign in to your account" : 
+              selectedRole ? `Join as ${roles.find(r => r.id === selectedRole)?.label}` : 
+              "Join the Farm2Table community"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {!isLogin && selectedRole && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {(() => {
+                    const roleData = roles.find(r => r.id === selectedRole);
+                    const Icon = roleData?.icon || User;
+                    return (
+                      <>
+                        <Icon className="h-5 w-5 text-green-600" />
+                        <span className="text-sm font-medium text-green-800">
+                          Registering as {roleData?.label}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRoleSelector(true)}
+                  className="text-green-600 hover:text-green-700 p-1"
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
-                {/* Role Selection */}
-                <div className="space-y-2">
-                  <Label>I am a:</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {roles.map((role) => {
-                      const Icon = role.icon;
-                      const isDisabled = role.id === 'admin' && !isAuthorizedAdminEmail(formData.email);
-                      return (
-                        <button
-                          key={role.id}
-                          type="button"
-                          disabled={isDisabled}
-                          onClick={() => !isDisabled && setSelectedRole(role.id)}
-                          className={`p-3 border rounded-lg text-left transition-colors ${
-                            selectedRole === role.id
-                              ? "border-green-500 bg-green-50"
-                              : isDisabled
-                              ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
-                              : "border-gray-200 hover:border-green-300"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <Icon className={`h-5 w-5 ${isDisabled ? 'text-gray-400' : 'text-green-600'}`} />
-                            <div>
-                              <div className="font-medium">{role.label}</div>
-                              <div className="text-sm text-gray-500">
-                                {role.description}
-                                {role.id === 'admin' && isDisabled && (
-                                  <span className="block text-red-500 mt-1">
-                                    Not authorized for this email
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
@@ -340,7 +383,7 @@ const Auth = () => {
             <p className="text-sm text-gray-600">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button 
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={handleModeSwitch}
                 className="text-green-600 hover:text-green-700 font-medium"
               >
                 {isLogin ? "Sign up here" : "Sign in here"}

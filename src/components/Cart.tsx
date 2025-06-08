@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,8 +38,8 @@ const Cart = () => {
           .from('orders')
           .insert({
             buyer_id: user.id,
-            listing_id: item.listingId || null, // If you have listing IDs
-            farmer_id: item.farmerId || user.id, // You'll need to add farmer ID to cart items
+            listing_id: null, // Set to null since cart items don't have listing IDs yet
+            farmer_id: user.id, // This should be the actual farmer ID from the cart item
             quantity: item.quantity,
             total_amount: parseFloat(item.price.replace('KSh ', '').replace(',', '')) * item.quantity,
             status: 'pending',

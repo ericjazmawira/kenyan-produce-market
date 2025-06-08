@@ -1,327 +1,346 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Header from "@/components/Header";
-import { Truck, Package, MapPin, Clock, DollarSign, CheckCircle, Phone } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Truck, Package, Clock, CheckCircle, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface DeliveryRequest {
+interface Order {
   id: string;
-  pickup: string;
-  destination: string;
-  produce: string;
-  quantity: string;
-  distance: string;
-  payment: string;
-  farmer: string;
-  buyer: string;
-  status: "Available" | "Accepted" | "In Progress" | "Completed";
-  deadline: string;
-  order_id?: string;
+  buyer_id: string;
+  listing_id: string;
+  farmer_id: string;
+  quantity: number;
+  total_amount: number;
+  status: string;
+  delivery_address: string;
+  created_at: string;
+  buyer_name?: string;
+  farmer_name?: string;
 }
 
 const TransporterDashboard = () => {
-  const [activeTab, setActiveTab] = useState("requests");
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // Fetch real orders from the database
-  const { data: orders, isLoading, refetch } = useQuery({
-    queryKey: ['transporter-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          listings (title, farmer_id),
-          user_profiles!orders_buyer_id_fkey (full_name, phone, location)
-        `)
-        .eq('status', 'confirmed');
-      
-      if (error) throw error;
-      return data;
-    }
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    activeJobs: 0,
+    completedJobs: 0,
+    totalEarnings: 0
   });
 
-  // Convert orders to delivery requests format
-  const deliveryRequests: DeliveryRequest[] = orders?.map(order => ({
-    id: `DEL-${order.id.slice(-8)}`,
-    order_id: order.id,
-    pickup: "Farm Location", // This would come from farmer's profile
-    destination: order.delivery_address || "Delivery Address",
-    produce: order.listings?.title || "Fresh Produce",
-    quantity: `${order.quantity} kg`,
-    distance: "25 km", // This would be calculated
-    payment: `KSh ${order.total_amount}`,
-    farmer: "Farmer Name", // This would come from farmer's profile
-    buyer: order.user_profiles?.full_name || "Buyer",
-    status: "Available",
-    deadline: "Today, 4:00 PM"
-  })) || [];
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-  // Mock data for demo purposes when no real orders
-  const mockDeliveryRequests: DeliveryRequest[] = [
-    {
-      id: "DEL-001",
-      pickup: "Kiambu Farm",
-      destination: "Nairobi CBD",
-      produce: "Fresh Tomatoes",
-      quantity: "100 kg",
-      distance: "25 km",
-      payment: "KSh 800",
-      farmer: "John Kamau",
-      buyer: "City Restaurant",
-      status: "Available",
-      deadline: "Today, 4:00 PM"
-    },
-    {
-      id: "DEL-002",
-      pickup: "Nakuru Market",
-      destination: "Eldoret",
-      produce: "Maize",
-      quantity: "500 kg",
-      distance: "80 km",
-      payment: "KSh 2,500",
-      farmer: "Mary Wanjiku",
-      buyer: "Wholesale Depot",
-      status: "Accepted",
-      deadline: "Tomorrow, 10:00 AM"
-    },
-    {
-      id: "DEL-003",
-      pickup: "Meru",
-      destination: "Nairobi",
-      produce: "Green Beans",
-      quantity: "75 kg",
-      distance: "180 km",
-      payment: "KSh 1,800",
-      farmer: "Peter Mwangi",
-      buyer: "Export Company",
-      status: "In Progress",
-      deadline: "Today, 6:00 PM"
-    }
-  ];
+  const fetchOrders = async () => {
+    try {
+      // Fetch orders that need transportation (pending or accepted status)
+      const { data: ordersData, error } = await supabase
+        .from('orders')
+        .select('*')
+        .in('status', ['pending', 'accepted', 'in_transit'])
+        .order('created_at', { ascending: false });
 
-  const allRequests = deliveryRequests.length > 0 ? deliveryRequests : mockDeliveryRequests;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return;
+      }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Available":
-        return "bg-green-100 text-green-800";
-      case "Accepted":
-        return "bg-blue-100 text-blue-800";
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-800";
-      case "Completed":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      // Fetch user profile data for buyer and farmer names
+      const buyerIds = [...new Set(ordersData.map(order => order.buyer_id))];
+      const farmerIds = [...new Set(ordersData.map(order => order.farmer_id))];
+      
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, full_name')
+        .in('user_id', [...buyerIds, ...farmerIds]);
+
+      // Create a map for quick lookup
+      const profileMap: { [key: string]: string } = {};
+      profiles?.forEach(profile => {
+        if (profile.full_name) {
+          profileMap[profile.user_id] = profile.full_name;
+        }
+      });
+
+      // Enhance orders with user names
+      const enhancedOrders = ordersData.map(order => ({
+        ...order,
+        buyer_name: profileMap[order.buyer_id] || 'Unknown Buyer',
+        farmer_name: profileMap[order.farmer_id] || 'Unknown Farmer'
+      }));
+
+      setOrders(enhancedOrders);
+
+      // Calculate stats
+      const totalJobs = enhancedOrders.length;
+      const activeJobs = enhancedOrders.filter(o => o.status === 'in_transit').length;
+      const completedJobs = enhancedOrders.filter(o => o.status === 'completed').length;
+      const totalEarnings = enhancedOrders
+        .filter(o => o.status === 'completed')
+        .reduce((sum, o) => sum + (o.total_amount * 0.1), 0); // 10% commission
+
+      setStats({ totalJobs, activeJobs, completedJobs, totalEarnings });
+    } catch (error) {
+      console.error('Error in fetchOrders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch orders. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAcceptJob = async (id: string, orderId?: string) => {
-    if (orderId) {
-      try {
-        // Update order status to in_progress when transporter accepts
-        await supabase
-          .from('orders')
-          .update({ status: 'in_progress' })
-          .eq('id', orderId);
+  const acceptJob = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: 'accepted',
+          // You could add transporter_id field to track who accepted the job
+        })
+        .eq('id', orderId);
 
-        toast({
-          title: "Job Accepted!",
-          description: "You have successfully accepted this delivery job.",
-        });
+      if (error) throw error;
 
-        refetch();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to accept the job. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
       toast({
         title: "Job Accepted!",
-        description: `You have accepted job ${id}`,
+        description: "You have successfully accepted this delivery job.",
+      });
+
+      fetchOrders(); // Refresh the list
+    } catch (error) {
+      console.error('Error accepting job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept job. Please try again.",
+        variant: "destructive"
       });
     }
   };
 
-  const RequestCard = ({ request }: { request: DeliveryRequest }) => (
-    <Card className="mb-4">
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-3">
-              <h3 className="font-semibold text-lg">{request.produce}</h3>
-              <Badge className={getStatusColor(request.status)}>
-                {request.status}
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{request.pickup} → {request.destination}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Package className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{request.quantity}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Truck className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{request.distance}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-semibold">{request.payment}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{request.deadline}</span>
-              </div>
-            </div>
-            
-            <div className="mt-3 text-sm text-gray-600">
-              <p><strong>Farmer:</strong> {request.farmer}</p>
-              <p><strong>Buyer:</strong> {request.buyer}</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col space-y-2 md:ml-6">
-            {request.status === "Available" && (
-              <Button onClick={() => handleAcceptJob(request.id, request.order_id)} className="w-full md:w-auto">
-                Accept Job
-              </Button>
-            )}
-            {request.status === "Accepted" && (
-              <Button variant="outline" className="w-full md:w-auto">
-                Start Pickup
-              </Button>
-            )}
-            {request.status === "In Progress" && (
-              <Button variant="outline" className="w-full md:w-auto">
-                Mark Delivered
-              </Button>
-            )}
-            <div className="flex space-x-2">
-              <Button size="sm" variant="outline">
-                <Phone className="h-4 w-4 mr-1" />
-                Farmer
-              </Button>
-              <Button size="sm" variant="outline">
-                <Phone className="h-4 w-4 mr-1" />
-                Buyer
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const startDelivery = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'in_transit' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Delivery Started!",
+        description: "Order is now in transit.",
+      });
+
+      fetchOrders();
+    } catch (error) {
+      console.error('Error starting delivery:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start delivery. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const completeDelivery = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'completed' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Delivery Completed!",
+        description: "Order has been delivered successfully.",
+      });
+
+      fetchOrders();
+    } catch (error) {
+      console.error('Error completing delivery:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete delivery. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline">Available</Badge>;
+      case 'accepted':
+        return <Badge className="bg-blue-500">Accepted</Badge>;
+      case 'in_transit':
+        return <Badge className="bg-yellow-500">In Transit</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-500">Completed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header title="Transporter Dashboard" />
-      
-      <div className="max-w-6xl mx-auto p-4">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Package className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="text-2xl font-bold">{allRequests.filter(r => r.status === "Available").length}</p>
-                  <p className="text-sm text-gray-600">Available Jobs</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Truck className="h-8 w-8 text-green-600" />
-                <div>
-                  <p className="text-2xl font-bold">{allRequests.filter(r => r.status === "Accepted" || r.status === "In Progress").length}</p>
-                  <p className="text-sm text-gray-600">Active Deliveries</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-8 w-8 text-purple-600" />
-                <div>
-                  <p className="text-2xl font-bold">45</p>
-                  <p className="text-sm text-gray-600">Completed</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-8 w-8 text-yellow-600" />
-                <div>
-                  <p className="text-2xl font-bold">KSh 45,200</p>
-                  <p className="text-sm text-gray-600">This Month</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="requests">Available Jobs</TabsTrigger>
-            <TabsTrigger value="active">Active Deliveries</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="requests" className="mt-6">
-            <div className="space-y-4">
-              {allRequests
-                .filter(req => req.status === "Available")
-                .map(request => (
-                  <RequestCard key={request.id} request={request} />
-                ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="active" className="mt-6">
-            <div className="space-y-4">
-              {allRequests
-                .filter(req => req.status === "Accepted" || req.status === "In Progress")
-                .map(request => (
-                  <RequestCard key={request.id} request={request} />
-                ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="completed" className="mt-6">
-            <div className="space-y-4">
-              {allRequests
-                .filter(req => req.status === "Completed")
-                .map(request => (
-                  <RequestCard key={request.id} request={request} />
-                ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Transporter Dashboard</h1>
+        <p className="text-xl text-gray-600">Manage your delivery jobs and earnings</p>
       </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Jobs</p>
+                <p className="text-3xl font-bold text-green-600">{stats.totalJobs}</p>
+              </div>
+              <Package className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Jobs</p>
+                <p className="text-3xl font-bold text-blue-600">{stats.activeJobs}</p>
+              </div>
+              <Truck className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-3xl font-bold text-purple-600">{stats.completedJobs}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Earnings</p>
+                <p className="text-3xl font-bold text-green-600">KSh {stats.totalEarnings.toFixed(2)}</p>
+              </div>
+              <div className="text-2xl">💰</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Available Jobs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Truck className="h-6 w-6" />
+            <span>Available Delivery Jobs</span>
+          </CardTitle>
+          <CardDescription>
+            Accept and manage delivery jobs from farmers to buyers
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {orders.length === 0 ? (
+            <div className="text-center py-8">
+              <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs available</h3>
+              <p className="text-gray-500">Check back later for new delivery opportunities</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                      {getStatusBadge(order.status)}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-green-600">KSh {order.total_amount}</p>
+                      <p className="text-sm text-gray-500">Est. earning: KSh {(order.total_amount * 0.1).toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="font-medium">From:</p>
+                      <p>{order.farmer_name}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">To:</p>
+                      <p>{order.buyer_name}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Delivery Address:</p>
+                      <p className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {order.delivery_address}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    {order.status === 'pending' && (
+                      <Button 
+                        onClick={() => acceptJob(order.id)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Accept Job
+                      </Button>
+                    )}
+                    {order.status === 'accepted' && (
+                      <Button 
+                        onClick={() => startDelivery(order.id)}
+                        className="bg-yellow-600 hover:bg-yellow-700"
+                      >
+                        Start Delivery
+                      </Button>
+                    )}
+                    {order.status === 'in_transit' && (
+                      <Button 
+                        onClick={() => completeDelivery(order.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Complete Delivery
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
