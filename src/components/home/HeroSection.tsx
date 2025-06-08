@@ -66,7 +66,7 @@ export const HeroSection = () => {
         navigate('/farmer-dashboard');
       }
     } else {
-      navigate('/login');
+      navigate('/register');
     }
   };
 

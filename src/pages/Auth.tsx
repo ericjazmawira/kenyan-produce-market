@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,8 @@ import { isAuthorizedAdminEmail } from "@/utils/adminConfig";
 import RoleSelector from "@/components/RoleSelector";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname === "/login");
   const [searchParams] = useSearchParams();
   const [selectedRole, setSelectedRole] = useState(searchParams.get("role") || "");
   const [showRoleSelector, setShowRoleSelector] = useState(!isLogin && !selectedRole);
