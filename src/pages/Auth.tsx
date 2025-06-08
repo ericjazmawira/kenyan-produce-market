@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, User, ShoppingCart, Shield } from "lucide-react";
+import { Leaf, User, ShoppingCart, Shield, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isAuthorizedAdminEmail } from "@/utils/adminConfig";
@@ -29,6 +29,7 @@ const Auth = () => {
   const roles = [
     { id: "farmer", label: "Farmer", icon: User, description: "Sell your produce directly to buyers" },
     { id: "buyer", label: "Buyer", icon: ShoppingCart, description: "Purchase fresh produce from farmers" },
+    { id: "transporter", label: "Transporter", icon: Truck, description: "Deliver produce from farmers to buyers" },
     { id: "admin", label: "Admin", icon: Shield, description: "Platform administration (restricted)" }
   ];
 
@@ -108,6 +109,8 @@ const Auth = () => {
               navigate('/farmer-dashboard');
             } else if (role === 'buyer') {
               navigate('/buyer-marketplace');
+            } else if (role === 'transporter') {
+              navigate('/transporter-dashboard');
             } else if (role === 'admin') {
               navigate('/admin-dashboard');
             } else {
@@ -124,7 +127,7 @@ const Auth = () => {
         if (!selectedRole) {
           toast({
             title: "Please select a role",
-            description: "You must choose whether you're a farmer, buyer, or admin.",
+            description: "You must choose whether you're a farmer, buyer, transporter, or admin.",
             variant: "destructive"
           });
           setLoading(false);

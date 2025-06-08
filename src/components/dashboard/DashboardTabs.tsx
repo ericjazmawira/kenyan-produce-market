@@ -11,9 +11,14 @@ import AdminManagement from "@/components/AdminManagement";
 import { ProduceListings } from "@/components/ProduceListings";
 import { OrderTracking } from "@/components/OrderTracking";
 
-export const DashboardTabs = () => {
+interface DashboardTabsProps {
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+}
+
+export const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
   return (
-    <Tabs defaultValue="overview" className="space-y-6">
+    <Tabs value={activeTab || "overview"} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="users">Users</TabsTrigger>

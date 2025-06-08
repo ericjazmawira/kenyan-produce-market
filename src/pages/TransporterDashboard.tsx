@@ -1,11 +1,15 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import { Truck, Package, MapPin, Clock, DollarSign, CheckCircle, Phone } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface DeliveryRequest {
   id: string;
@@ -19,11 +23,50 @@ interface DeliveryRequest {
   buyer: string;
   status: "Available" | "Accepted" | "In Progress" | "Completed";
   deadline: string;
+  order_id?: string;
 }
 
 const TransporterDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
-  const [deliveryRequests] = useState<DeliveryRequest[]>([
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch real orders from the database
+  const { data: orders, isLoading, refetch } = useQuery({
+    queryKey: ['transporter-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          listings (title, farmer_id),
+          user_profiles!orders_buyer_id_fkey (full_name, phone, location)
+        `)
+        .eq('status', 'confirmed');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Convert orders to delivery requests format
+  const deliveryRequests: DeliveryRequest[] = orders?.map(order => ({
+    id: `DEL-${order.id.slice(-8)}`,
+    order_id: order.id,
+    pickup: "Farm Location", // This would come from farmer's profile
+    destination: order.delivery_address || "Delivery Address",
+    produce: order.listings?.title || "Fresh Produce",
+    quantity: `${order.quantity} kg`,
+    distance: "25 km", // This would be calculated
+    payment: `KSh ${order.total_amount}`,
+    farmer: "Farmer Name", // This would come from farmer's profile
+    buyer: order.user_profiles?.full_name || "Buyer",
+    status: "Available",
+    deadline: "Today, 4:00 PM"
+  })) || [];
+
+  // Mock data for demo purposes when no real orders
+  const mockDeliveryRequests: DeliveryRequest[] = [
     {
       id: "DEL-001",
       pickup: "Kiambu Farm",
@@ -63,7 +106,9 @@ const TransporterDashboard = () => {
       status: "In Progress",
       deadline: "Today, 6:00 PM"
     }
-  ]);
+  ];
+
+  const allRequests = deliveryRequests.length > 0 ? deliveryRequests : mockDeliveryRequests;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -80,8 +125,34 @@ const TransporterDashboard = () => {
     }
   };
 
-  const handleAcceptJob = (id: string) => {
-    console.log(`Accepting job ${id}`);
+  const handleAcceptJob = async (id: string, orderId?: string) => {
+    if (orderId) {
+      try {
+        // Update order status to in_progress when transporter accepts
+        await supabase
+          .from('orders')
+          .update({ status: 'in_progress' })
+          .eq('id', orderId);
+
+        toast({
+          title: "Job Accepted!",
+          description: "You have successfully accepted this delivery job.",
+        });
+
+        refetch();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to accept the job. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Job Accepted!",
+        description: `You have accepted job ${id}`,
+      });
+    }
   };
 
   const RequestCard = ({ request }: { request: DeliveryRequest }) => (
@@ -127,7 +198,7 @@ const TransporterDashboard = () => {
           
           <div className="flex flex-col space-y-2 md:ml-6">
             {request.status === "Available" && (
-              <Button onClick={() => handleAcceptJob(request.id)} className="w-full md:w-auto">
+              <Button onClick={() => handleAcceptJob(request.id, request.order_id)} className="w-full md:w-auto">
                 Accept Job
               </Button>
             )}
@@ -169,7 +240,7 @@ const TransporterDashboard = () => {
               <div className="flex items-center space-x-2">
                 <Package className="h-8 w-8 text-blue-600" />
                 <div>
-                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-2xl font-bold">{allRequests.filter(r => r.status === "Available").length}</p>
                   <p className="text-sm text-gray-600">Available Jobs</p>
                 </div>
               </div>
@@ -181,7 +252,7 @@ const TransporterDashboard = () => {
               <div className="flex items-center space-x-2">
                 <Truck className="h-8 w-8 text-green-600" />
                 <div>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">{allRequests.filter(r => r.status === "Accepted" || r.status === "In Progress").length}</p>
                   <p className="text-sm text-gray-600">Active Deliveries</p>
                 </div>
               </div>
@@ -222,7 +293,7 @@ const TransporterDashboard = () => {
           
           <TabsContent value="requests" className="mt-6">
             <div className="space-y-4">
-              {deliveryRequests
+              {allRequests
                 .filter(req => req.status === "Available")
                 .map(request => (
                   <RequestCard key={request.id} request={request} />
@@ -232,7 +303,7 @@ const TransporterDashboard = () => {
           
           <TabsContent value="active" className="mt-6">
             <div className="space-y-4">
-              {deliveryRequests
+              {allRequests
                 .filter(req => req.status === "Accepted" || req.status === "In Progress")
                 .map(request => (
                   <RequestCard key={request.id} request={request} />
@@ -242,7 +313,7 @@ const TransporterDashboard = () => {
           
           <TabsContent value="completed" className="mt-6">
             <div className="space-y-4">
-              {deliveryRequests
+              {allRequests
                 .filter(req => req.status === "Completed")
                 .map(request => (
                   <RequestCard key={request.id} request={request} />

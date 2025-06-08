@@ -5,12 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Plus, Minus, Trash2, Phone, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) {
       toast({
         title: "Cart is empty",
@@ -20,11 +23,50 @@ const Cart = () => {
       return;
     }
 
-    toast({
-      title: "Order Placed!",
-      description: `Your order for KSh ${getCartTotal().toFixed(2)} has been placed successfully.`,
-    });
-    clearCart();
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to place an order.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create orders for each cart item
+      for (const item of cartItems) {
+        const { error } = await supabase
+          .from('orders')
+          .insert({
+            buyer_id: user.id,
+            listing_id: item.listingId || null, // If you have listing IDs
+            farmer_id: item.farmerId || user.id, // You'll need to add farmer ID to cart items
+            quantity: item.quantity,
+            total_amount: parseFloat(item.price.replace('KSh ', '').replace(',', '')) * item.quantity,
+            status: 'pending',
+            delivery_address: 'Default delivery address' // You can add an address form later
+          });
+
+        if (error) {
+          console.error('Error creating order:', error);
+          throw error;
+        }
+      }
+
+      toast({
+        title: "Order Placed!",
+        description: `Your order for KSh ${getCartTotal().toFixed(2)} has been placed successfully.`,
+      });
+      
+      clearCart();
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to place order. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleContactFarmer = (farmer: string, phone: string) => {
