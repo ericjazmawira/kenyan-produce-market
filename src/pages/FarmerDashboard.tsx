@@ -1,13 +1,17 @@
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import EditListingDialog from "@/components/EditListingDialog";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { TransportJobs } from "@/components/TransportJobs";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FarmerDashboard = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState([
     { id: 1, name: "Fresh Tomatoes", quantity: "50kg", price: "KSh 80/kg", status: "active", orders: 5, description: "Farm-fresh tomatoes, harvested yesterday", category: "vegetables" },
@@ -79,10 +83,33 @@ const FarmerDashboard = () => {
         </div>
 
         <div className="mt-8">
-          <DashboardTabs 
-            activeTab="overview"
-            setActiveTab={() => {}}
-          />
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="listings">Listings</TabsTrigger>
+              <TabsTrigger value="transport">Transport Jobs</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="mt-6">
+              <DashboardTabs 
+                activeTab="overview"
+                setActiveTab={() => {}}
+              />
+            </TabsContent>
+            <TabsContent value="listings" className="mt-6">
+              <DashboardTabs 
+                activeTab="listings"
+                setActiveTab={() => {}}
+              />
+            </TabsContent>
+            <TabsContent value="transport" className="mt-6">
+              {user && (
+                <TransportJobs 
+                  userRole="farmer" 
+                  userId={user.id}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 

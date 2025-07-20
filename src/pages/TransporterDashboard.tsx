@@ -4,9 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Package, Clock, CheckCircle, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { TransportJobs } from "@/components/TransportJobs";
 
 interface Order {
   id: string;
@@ -258,89 +260,107 @@ const TransporterDashboard = () => {
         </Card>
       </div>
 
-      {/* Available Jobs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Truck className="h-6 w-6" />
-            <span>Available Delivery Jobs</span>
-          </CardTitle>
-          <CardDescription>
-            Accept and manage delivery jobs from farmers to buyers
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {orders.length === 0 ? (
-            <div className="text-center py-8">
-              <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs available</h3>
-              <p className="text-gray-500">Check back later for new delivery opportunities</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
-                      {getStatusBadge(order.status)}
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-green-600">KSh {order.total_amount}</p>
-                      <p className="text-sm text-gray-500">Est. earning: KSh {(order.total_amount * 0.1).toFixed(2)}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="font-medium">From:</p>
-                      <p>{order.farmer_name}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">To:</p>
-                      <p>{order.buyer_name}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Delivery Address:</p>
-                      <p className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {order.delivery_address}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    {order.status === 'pending' && (
-                      <Button 
-                        onClick={() => acceptJob(order.id)}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Accept Job
-                      </Button>
-                    )}
-                    {order.status === 'accepted' && (
-                      <Button 
-                        onClick={() => startDelivery(order.id)}
-                        className="bg-yellow-600 hover:bg-yellow-700"
-                      >
-                        Start Delivery
-                      </Button>
-                    )}
-                    {order.status === 'in_transit' && (
-                      <Button 
-                        onClick={() => completeDelivery(order.id)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Complete Delivery
-                      </Button>
-                    )}
-                  </div>
+      {/* Tabs for different job types */}
+      <Tabs defaultValue="orders" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="orders">Order Deliveries</TabsTrigger>
+          <TabsTrigger value="transport">Transport Jobs</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="orders" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Truck className="h-6 w-6" />
+                <span>Available Delivery Jobs</span>
+              </CardTitle>
+              <CardDescription>
+                Accept and manage delivery jobs from farmers to buyers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs available</h3>
+                  <p className="text-gray-500">Check back later for new delivery opportunities</p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div key={order.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-green-600">KSh {order.total_amount}</p>
+                          <p className="text-sm text-gray-500">Est. earning: KSh {(order.total_amount * 0.1).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium">From:</p>
+                          <p>{order.farmer_name}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">To:</p>
+                          <p>{order.buyer_name}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium">Delivery Address:</p>
+                          <p className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {order.delivery_address}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        {order.status === 'pending' && (
+                          <Button 
+                            onClick={() => acceptJob(order.id)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Accept Job
+                          </Button>
+                        )}
+                        {order.status === 'accepted' && (
+                          <Button 
+                            onClick={() => startDelivery(order.id)}
+                            className="bg-yellow-600 hover:bg-yellow-700"
+                          >
+                            Start Delivery
+                          </Button>
+                        )}
+                        {order.status === 'in_transit' && (
+                          <Button 
+                            onClick={() => completeDelivery(order.id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Complete Delivery
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="transport" className="mt-6">
+          {user && (
+            <TransportJobs 
+              userRole="transporter" 
+              userId={user.id}
+            />
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
