@@ -160,10 +160,51 @@ export const useAuth = (isLogin: boolean, selectedRole: string) => {
           }
         }
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to confirm your account before logging in.",
-        });
+        // Auto-login the user after successful signup
+        if (data.user && !data.user.email_confirmed_at) {
+          // For development/demo purposes, automatically sign in the user
+          try {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            });
+
+            if (!signInError && signInData.user) {
+              toast({
+                title: "Account created and logged in!",
+                description: "Welcome to Farm2Table! You've been automatically logged in.",
+              });
+
+              // Redirect based on user role
+              setTimeout(() => {
+                if (selectedRole === 'farmer') {
+                  navigate('/farmer-dashboard');
+                } else if (selectedRole === 'buyer') {
+                  navigate('/buyer-marketplace');
+                } else if (selectedRole === 'transporter') {
+                  navigate('/transporter-dashboard');
+                } else if (selectedRole === 'admin') {
+                  navigate('/admin-dashboard');
+                } else {
+                  navigate('/buyer-marketplace');
+                }
+              }, 100);
+            } else {
+              throw signInError;
+            }
+          } catch (autoLoginError) {
+            console.error('Auto-login failed:', autoLoginError);
+            toast({
+              title: "Account created!",
+              description: "Please check your email to confirm your account before logging in.",
+            });
+          }
+        } else {
+          toast({
+            title: "Account created!",
+            description: "Please check your email to confirm your account before logging in.",
+          });
+        }
 
         // Clear form data
         setFormData({

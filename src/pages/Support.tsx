@@ -138,7 +138,15 @@ const Support = () => {
               <Phone className="h-8 w-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Call Us</h3>
               <p className="text-sm text-gray-600 mb-3">Available Mon-Fri, 8AM-6PM</p>
-              <p className="font-medium">+254 700 123 456</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open('tel:+254700123456', '_self')}
+                className="w-full"
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                +254 700 123 456
+              </Button>
             </CardContent>
           </Card>
           
@@ -147,7 +155,15 @@ const Support = () => {
               <Mail className="h-8 w-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Email Support</h3>
               <p className="text-sm text-gray-600 mb-3">Response within 24 hours</p>
-              <p className="font-medium">help@farm2table.co.ke</p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open('mailto:help@farm2table.co.ke?subject=Support Request', '_blank')}
+                className="w-full"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email Us
+              </Button>
             </CardContent>
           </Card>
           
@@ -156,7 +172,23 @@ const Support = () => {
               <MessageSquare className="h-8 w-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Live Chat</h3>
               <p className="text-sm text-gray-600 mb-3">Chat with our team</p>
-              <Button size="sm">Start Chat</Button>
+              <Button 
+                size="sm" 
+                onClick={() => {
+                  toast({
+                    title: "Live Chat",
+                    description: "Chat feature opening... You'll be connected to our support team shortly.",
+                  });
+                  // In a real implementation, this would open a chat widget
+                  setTimeout(() => {
+                    window.open('https://wa.me/254700123456?text=Hello! I need help with Farm2Table.', '_blank');
+                  }, 1000);
+                }}
+                className="w-full"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Start Chat
+              </Button>
             </CardContent>
           </Card>
         </div>
