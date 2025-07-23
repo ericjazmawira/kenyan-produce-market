@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Plus, Minus, Trash2, Phone, MessageCircle } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Phone, MessageCircle, Truck, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +16,10 @@ const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
@@ -31,6 +40,15 @@ const Cart = () => {
       return;
     }
 
+    if (deliveryOption === 'delivery' && !deliveryAddress.trim()) {
+      toast({
+        title: "Delivery address required",
+        description: "Please enter a delivery address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       // Create orders for each cart item
       for (const item of cartItems) {
@@ -43,7 +61,7 @@ const Cart = () => {
             quantity: item.quantity,
             total_amount: parseFloat(item.price.replace('KSh ', '').replace(',', '')) * item.quantity,
             status: 'pending',
-            delivery_address: 'Default delivery address' // You can add an address form later
+            delivery_address: deliveryOption === 'delivery' ? deliveryAddress : null
           });
 
         if (error) {
@@ -58,6 +76,8 @@ const Cart = () => {
       });
       
       clearCart();
+      setShowCheckoutDialog(false);
+      setDeliveryAddress('');
     } catch (error) {
       console.error('Checkout error:', error);
       toast({
@@ -173,12 +193,71 @@ const Cart = () => {
             >
               Clear Cart
             </Button>
-            <Button
-              onClick={handleCheckout}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-            >
-              Proceed to Checkout
-            </Button>
+            <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
+              <DialogTrigger asChild>
+                <Button className="flex-1 bg-green-600 hover:bg-green-700">
+                  Proceed to Checkout
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Checkout Options</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium">Delivery Method</Label>
+                    <RadioGroup 
+                      value={deliveryOption} 
+                      onValueChange={(value: 'pickup' | 'delivery') => setDeliveryOption(value)}
+                      className="mt-3"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pickup" id="pickup" />
+                        <Label htmlFor="pickup" className="flex items-center space-x-2 cursor-pointer">
+                          <Home className="h-4 w-4" />
+                          <span>Pickup from farm</span>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="delivery" id="delivery" />
+                        <Label htmlFor="delivery" className="flex items-center space-x-2 cursor-pointer">
+                          <Truck className="h-4 w-4" />
+                          <span>Home delivery</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  {deliveryOption === 'delivery' && (
+                    <div>
+                      <Label htmlFor="address">Delivery Address *</Label>
+                      <Input
+                        id="address"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        placeholder="Enter your full delivery address"
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-medium">Total:</span>
+                      <span className="text-xl font-bold text-green-600">
+                        KSh {getCartTotal().toFixed(2)}
+                      </span>
+                    </div>
+                    <Button 
+                      onClick={handleCheckout}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      Place Order
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

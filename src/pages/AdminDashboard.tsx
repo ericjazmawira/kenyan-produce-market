@@ -41,14 +41,18 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardHeader />
+        <DashboardHeader 
+          title="Admin Dashboard" 
+          subtitle="Manage your Farm2Table marketplace"
+          showAdminActions={true}
+        />
         
         <div className="mt-8">
           <StatsCards />
         </div>
 
         <div className="mt-8">
-          <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} userRole="admin" />
         </div>
       </div>
     </div>

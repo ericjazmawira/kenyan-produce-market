@@ -16,7 +16,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Eye, TrendingUp, Activity } from "lucide-react";
 
-export const RecentOrdersTab = () => {
+interface RecentOrdersTabProps {
+  userRole?: string;
+}
+
+export const RecentOrdersTab = ({ userRole }: RecentOrdersTabProps) => {
   const { data: recentOrders, isLoading } = useQuery({
     queryKey: ['recent-orders'],
     queryFn: async () => {

@@ -15,7 +15,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const StatsCards = () => {
+interface StatsCardsProps {
+  userRole?: string;
+}
+
+export const StatsCards = ({ userRole }: StatsCardsProps) => {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: async () => {

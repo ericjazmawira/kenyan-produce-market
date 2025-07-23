@@ -17,6 +17,7 @@ import Messages from "./pages/Messages";
 import Support from "./pages/Support";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import BuyerMarketplace from "./pages/BuyerMarketplace";
+import BuyerDashboard from "./pages/BuyerDashboard";
 import TransporterDashboard from "./pages/TransporterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -82,6 +83,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requiredRole="buyer">
                       <BuyerMarketplace />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/buyer-dashboard" 
+                  element={
+                    <ProtectedRoute requiredRole="buyer">
+                      <BuyerDashboard />
                     </ProtectedRoute>
                   } 
                 />
