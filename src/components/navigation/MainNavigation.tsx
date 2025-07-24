@@ -53,46 +53,77 @@ const MainNavigation = () => {
   const cartItemCount = (cartItems || []).reduce((total, item) => total + item.quantity, 0);
 
   const getNavigationItems = () => {
-    const baseItems = [
-      { href: "/", label: "Home", icon: Home },
-      { href: "/market-prices", label: "Market Prices", icon: TrendingUp }
+    // Always include Home - common across all roles
+    const commonItems = [
+      { href: "/", label: "Home", icon: Home }
     ];
 
     if (!user) {
       return [
-        ...baseItems,
+        ...commonItems,
+        { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
         { href: "/support", label: "Help", icon: HelpCircle }
       ];
     }
 
-    const authenticatedItems = [
-      ...baseItems,
-      { href: "/profile", label: "My Account", icon: User },
-      { href: "/orders", label: "Orders", icon: Package },
-      { href: "/messages", label: "Messages", icon: MessageSquare },
-      { href: "/support", label: "Help", icon: HelpCircle }
-    ];
+    // Role-specific navigation items
+    switch (userRole) {
+      case "farmer":
+        return [
+          ...commonItems,
+          { href: "/farmer-dashboard", label: "Dashboard", icon: TrendingUp },
+          { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
+          { href: "/orders", label: "Orders", icon: Package },
+          { href: "/messages", label: "Messages", icon: MessageSquare },
+          { href: "/profile", label: "Profile", icon: User },
+          { href: "/support", label: "Support", icon: HelpCircle }
+        ];
 
-    // Role-specific items
-    if (userRole === "farmer") {
-      authenticatedItems.splice(2, 0, 
-        { href: "/farmer-dashboard", label: "My Dashboard", icon: TrendingUp }
-      );
-    } else if (userRole === "buyer") {
-      authenticatedItems.splice(2, 0, 
-        { href: "/buyer-marketplace", label: "Marketplace", icon: Store }
-      );
-    } else if (userRole === "transporter") {
-      authenticatedItems.splice(2, 0, 
-        { href: "/transporter-dashboard", label: "Jobs", icon: Truck }
-      );
-    } else if (userRole === "admin") {
-      authenticatedItems.splice(2, 0, 
-        { href: "/admin-dashboard", label: "Admin Panel", icon: TrendingUp }
-      );
+      case "buyer":
+        return [
+          ...commonItems,
+          { href: "/buyer-dashboard", label: "Dashboard", icon: User },
+          { href: "/buyer-marketplace", label: "Marketplace", icon: Store },
+          { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
+          { href: "/orders", label: "Orders", icon: Package },
+          { href: "/messages", label: "Messages", icon: MessageSquare },
+          { href: "/profile", label: "Profile", icon: User },
+          { href: "/support", label: "Support", icon: HelpCircle }
+        ];
+
+      case "transporter":
+        return [
+          ...commonItems,
+          { href: "/transporter-dashboard", label: "Dashboard", icon: Truck },
+          { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
+          { href: "/orders", label: "Deliveries", icon: Package },
+          { href: "/messages", label: "Messages", icon: MessageSquare },
+          { href: "/profile", label: "Profile", icon: User },
+          { href: "/support", label: "Support", icon: HelpCircle }
+        ];
+
+      case "admin":
+        return [
+          ...commonItems,
+          { href: "/admin-dashboard", label: "Admin Dashboard", icon: TrendingUp },
+          { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
+          { href: "/orders", label: "All Orders", icon: Package },
+          { href: "/messages", label: "Messages", icon: MessageSquare },
+          { href: "/profile", label: "Profile", icon: User },
+          { href: "/support", label: "Support", icon: HelpCircle }
+        ];
+
+      default:
+        // Fallback for authenticated users without a specific role
+        return [
+          ...commonItems,
+          { href: "/market-prices", label: "Market Prices", icon: TrendingUp },
+          { href: "/profile", label: "Profile", icon: User },
+          { href: "/orders", label: "Orders", icon: Package },
+          { href: "/messages", label: "Messages", icon: MessageSquare },
+          { href: "/support", label: "Support", icon: HelpCircle }
+        ];
     }
-
-    return authenticatedItems;
   };
 
   const navigationItems = getNavigationItems();
