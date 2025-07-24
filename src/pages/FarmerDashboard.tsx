@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import EditListingDialog from "@/components/EditListingDialog";
+import { AddProduceDialog } from "@/components/AddProduceDialog";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { TransportJobs } from "@/components/TransportJobs";
@@ -78,15 +79,22 @@ const FarmerDashboard = () => {
     });
   };
 
+  const handleAddProduce = (newProduce: any) => {
+    setActiveListings(prev => [...prev, newProduce]);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Farmer Dashboard" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardHeader 
-          title="Farmer Dashboard" 
-          subtitle="Manage your listings and orders"
-        />
+        <div className="flex justify-between items-center">
+          <DashboardHeader 
+            title="Farmer Dashboard" 
+            subtitle="Manage your listings and orders"
+          />
+          <AddProduceDialog onAddProduce={handleAddProduce} />
+        </div>
         
         <div className="mt-8">
           <StatsCards userRole="farmer" />
@@ -116,10 +124,7 @@ const FarmerDashboard = () => {
             <TabsContent value="listings" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">My Listings</h2>
-                <Button onClick={() => setIsEditDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Listing
-                </Button>
+                <AddProduceDialog onAddProduce={handleAddProduce} />
               </div>
 
               <div className="grid gap-6">

@@ -53,36 +53,60 @@ export const StatsCards = ({ userRole }: StatsCardsProps) => {
     }
   });
 
-  const statCards = [
-    {
-      title: "Total Users",
-      value: stats?.total_users || 0,
-      icon: Users,
-      description: `${stats?.total_farmers || 0} farmers, ${stats?.total_buyers || 0} buyers`,
-      trend: "+12%"
-    },
-    {
-      title: "Active Listings",
-      value: stats?.active_listings || 0,
-      icon: Package,
-      description: "Products available",
-      trend: "+8%"
-    },
-    {
-      title: "Total Orders",
-      value: stats?.total_orders || 0,
-      icon: ShoppingCart,
-      description: "All time orders",
-      trend: "+23%"
-    },
-    {
-      title: "Revenue",
-      value: `$${stats?.total_revenue || 0}`,
-      icon: DollarSign,
-      description: "Total platform revenue",
-      trend: "+15%"
+  const getStatsForRole = () => {
+    if (userRole === 'farmer') {
+      return [
+        {
+          title: "Active Listings",
+          value: stats?.active_listings || 0,
+          icon: Package,
+          description: "Your products available",
+          trend: "+8%"
+        },
+        {
+          title: "Total Orders",
+          value: stats?.total_orders || 0,
+          icon: ShoppingCart,
+          description: "Your orders received",
+          trend: "+23%"
+        }
+      ];
     }
-  ];
+    
+    // Admin and other roles see all stats
+    return [
+      {
+        title: "Total Users",
+        value: stats?.total_users || 0,
+        icon: Users,
+        description: `${stats?.total_farmers || 0} farmers, ${stats?.total_buyers || 0} buyers`,
+        trend: "+12%"
+      },
+      {
+        title: "Active Listings",
+        value: stats?.active_listings || 0,
+        icon: Package,
+        description: "Products available",
+        trend: "+8%"
+      },
+      {
+        title: "Total Orders",
+        value: stats?.total_orders || 0,
+        icon: ShoppingCart,
+        description: "All time orders",
+        trend: "+23%"
+      },
+      {
+        title: "Revenue",
+        value: `$${stats?.total_revenue || 0}`,
+        icon: DollarSign,
+        description: "Total platform revenue",
+        trend: "+15%"
+      }
+    ];
+  };
+
+  const statCards = getStatsForRole();
 
   const orderStatusCards = [
     {
