@@ -73,7 +73,31 @@ export const StatsCards = ({ userRole }: StatsCardsProps) => {
       ];
     }
     
-    // Admin and other roles see all stats
+    if (userRole === 'buyer') {
+      return [
+        {
+          title: "Total Orders",
+          value: stats?.total_orders || 0,
+          icon: ShoppingCart,
+          description: "Your orders placed",
+          trend: "+15%"
+        }
+      ];
+    }
+    
+    if (userRole === 'transporter') {
+      return [
+        {
+          title: "Active Jobs",
+          value: 0, // Will be updated with real data
+          icon: Package,
+          description: "Transport jobs available",
+          trend: "+5%"
+        }
+      ];
+    }
+    
+    // Admin role sees all stats
     return [
       {
         title: "Total Users",
