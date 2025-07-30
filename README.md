@@ -36,7 +36,18 @@ Built to streamline agricultural commerce and logistics through a simple, mobile
 git clone https://github.com/ericjazmawira/kenyan-produce-market.git
 cd kenyan-produce-market
 
-1. **Clone the repo**
+2. **Frontend Setup**
 cd frontend
 pnpm install
 pnpm dev
+
+3. **Backend Setup**
+
+cd backend
+pnpm install
+cp .env.example .env  # then edit with your Mongo URI
+pnpm dev
+
+4. **.env (Backend)**
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/kenyaproduce
+PORT=10000
