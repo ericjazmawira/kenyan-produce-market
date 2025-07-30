@@ -81,15 +81,11 @@ Expected response:
 
 ---
 
-## 📄 License
-
-Licensed under the **MIT License** – free to use, modify, and distribute.
-
 ---
 
 ## 🙌 Acknowledgements
 
-This project was built as part of the **Power Learn Project Software Develeopment Scholarship (PLP)** – Web Dev 
+This project was built as part of the **Power Learn Project Software Develeopment Scholarship (PLP)** – MERN-STACK
 
 Special thanks to:
 - Supabase (for initial backend structure)
