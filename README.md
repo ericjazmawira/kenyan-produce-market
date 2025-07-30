@@ -35,3 +35,8 @@ Built to streamline agricultural commerce and logistics through a simple, mobile
 ```bash
 git clone https://github.com/ericjazmawira/kenyan-produce-market.git
 cd kenyan-produce-market
+
+1. **Clone the repo**
+cd frontend
+pnpm install
+pnpm dev
