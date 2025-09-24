@@ -91,3 +91,7 @@ Special thanks to:
 - Supabase (for initial backend structure)
 - MongoDB Atlas (database)
 - Render and Vercel (deployment)
+
+## Demo video
+- Find the demo video of the live site
+Eric Mawira732 shared a CapCut link with you 0924 https://www.capcut.com/view/7553751386475741697?workspaceId=7376134627544662033
